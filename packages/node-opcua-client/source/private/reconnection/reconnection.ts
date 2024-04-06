@@ -481,12 +481,17 @@ export function repair_client_session(client: IClientBase, session: ClientSessio
         doDebug && debugLog("Aborting reactivation of old session because user requested session to be close");
         return callback();
     }
-
     doDebug && debugLog(chalk.yellow("Starting client session repair"));
 
     const privateSession = session as any as Reconnectable;
     privateSession._reconnecting = privateSession._reconnecting || { reconnecting: false, pendingCallbacks: [] };
 
+    if (session.hasBeenClosed()) {
+        
+        privateSession._reconnecting.reconnecting = false;
+        doDebug && debugLog("Aborting reactivation of old session because session has been closed");
+        return callback();
+    }
     if (privateSession._reconnecting.reconnecting) {
         doDebug && debugLog(chalk.bgCyan("Reconnecting already happening for session"), session.sessionId.toString());
         privateSession._reconnecting.pendingCallbacks.push(callback);
